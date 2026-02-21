@@ -8,6 +8,8 @@
 #include <unistd.h>
 const char *sysname = "shellish";
 
+char *resolve_path(char *name);
+
 enum return_codes {
   SUCCESS = 0,
   EXIT = 1,
@@ -336,7 +338,12 @@ int process_command(struct command_t *command) {
 
     // TODO: do your own exec with path resolving using execv()
     // do so by replacing the execvp call below
-    execvp(command->name, command->args); // exec+args+path
+
+    char *path = resolve_path(command->name);
+    execv(path, command->args);
+    free(path);
+
+    //execvp(command->name, command->args); // exec+args+path
     printf("-%s: %s: command not found\n", sysname, command->name);
     exit(127);
   } else {
@@ -344,6 +351,38 @@ int process_command(struct command_t *command) {
     wait(0); // wait for child process to finish
     return SUCCESS;
   }
+}
+
+char *resolve_path(char *name) {
+  char *env = getenv("PATH");
+  char env_copy[4096];
+  strcpy(env_copy, env);
+
+  int DIR_MAX = 128;
+  char *path_buf[DIR_MAX];
+  int cur = 0;
+  
+  char *pch;
+  pch = strtok(env_copy, ":");
+  while (pch != NULL) {
+    path_buf[cur++] = pch;
+    pch = strtok(NULL, ":");
+  }
+
+  for (int i = 0; i < cur; i++) {
+    char *folder = path_buf[i];
+    char *path = malloc(1028);
+    sprintf(path, "%s/%s", folder, name);
+    
+    FILE *file = fopen(path, "r");
+    if (file != NULL) {
+      fclose(file);
+      return path;
+    }
+    free(path);
+  }
+
+  return NULL;
 }
 
 int main() {
