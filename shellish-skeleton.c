@@ -27,6 +27,7 @@ struct command_t {
 
 char *resolve_path(char *name);
 int set_redirect(struct command_t *command);
+int set_pipe(struct command_t *command);
 
 /**
  * Prints a command struct
@@ -339,8 +340,12 @@ int process_command(struct command_t *command) {
 
     // TODO: do your own exec with path resolving using execv()
     // do so by replacing the execvp call below
-    int st = set_redirect(command);
-    if (st == 1) {
+    if (command->next != NULL) {
+      set_pipe(command);
+      exit(1);
+    }
+
+    if (set_redirect(command) == 1) {
       printf("bad file descriptor");
       exit(1);
     }
@@ -360,6 +365,33 @@ int process_command(struct command_t *command) {
 
     return SUCCESS;
   }
+}
+
+int set_pipe(struct command_t *command) {
+  if (command->next == NULL) {
+    execv(resolve_path(command->name), command->args);
+  }
+
+  int fd[2];
+  pipe(fd);
+
+  pid_t pid = fork();
+  if (pid == 0) {
+    dup2(fd[1], STDOUT_FILENO);
+    close(fd[0]);
+    close(fd[1]);
+    
+    execv(resolve_path(command->name), command->args);
+    exit(1);
+  }
+
+  dup2(fd[0], STDIN_FILENO);
+  close(fd[0]);
+  close(fd[1]);
+
+  waitpid(pid, NULL, 0);
+
+  return set_pipe(command->next);
 }
 
 int set_redirect(struct command_t *command) {
