@@ -352,7 +352,6 @@ int process_command(struct command_t *command) {
 
     char *path = resolve_path(command->name);
     execv(path, command->args);
-    free(path);
 
     //execvp(command->name, command->args); // exec+args+path
     printf("-%s: %s: command not found\n", sysname, command->name);
@@ -421,6 +420,12 @@ int set_redirect(struct command_t *command) {
 }
 
 char *resolve_path(char *name) {
+  if (strcmp(name, "cut") == 0) {
+    char *path = malloc(1028);
+    strcpy(path, "./cut");
+    return path;
+  }
+
   char *env = getenv("PATH");
   char env_copy[4096];
   strcpy(env_copy, env);
@@ -446,7 +451,7 @@ char *resolve_path(char *name) {
       fclose(file);
       return path;
     }
-    free(path);
+
   }
 
   return NULL;
