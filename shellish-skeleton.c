@@ -6,9 +6,8 @@
 #include <sys/wait.h>
 #include <termios.h> // termios, TCSANOW, ECHO, ICANON
 #include <unistd.h>
+#include <fcntl.h>
 const char *sysname = "shellish";
-
-char *resolve_path(char *name);
 
 enum return_codes {
   SUCCESS = 0,
@@ -25,6 +24,9 @@ struct command_t {
   char *redirects[3];     // in/out redirection
   struct command_t *next; // for piping
 };
+
+char *resolve_path(char *name);
+int set_redirect(struct command_t *command);
 
 /**
  * Prints a command struct
@@ -248,7 +250,6 @@ int prompt(struct command_t *command) {
   while (1) {
     c = getchar();
     // printf("Keycode: %u\n", c); // DEBUG: uncomment for debugging
-
     if (c == 9) // handle tab
     {
       buf[index++] = '?'; // autocomplete
@@ -338,6 +339,11 @@ int process_command(struct command_t *command) {
 
     // TODO: do your own exec with path resolving using execv()
     // do so by replacing the execvp call below
+    int st = set_redirect(command);
+    if (st == 1) {
+      printf("bad file descriptor");
+      exit(1);
+    }
 
     char *path = resolve_path(command->name);
     execv(path, command->args);
@@ -354,6 +360,32 @@ int process_command(struct command_t *command) {
 
     return SUCCESS;
   }
+}
+
+int set_redirect(struct command_t *command) {
+  int fd;
+  if (command->redirects[0] != NULL) {
+    fd = open(command->redirects[0], O_RDONLY);
+    if (fd < 0) { return 1; }
+    dup2(fd, STDIN_FILENO);
+    close(fd);
+  }
+
+  if (command->redirects[1] != NULL) {
+    fd = open(command->redirects[1], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (fd < 0) { return 1; }
+    dup2(fd, STDOUT_FILENO);
+    close(fd);
+  }
+
+  if (command->redirects[2] != NULL) {
+    fd = open(command->redirects[2], O_APPEND | O_CREAT | O_WRONLY, 0666);
+    if (fd < 0) { return 1; }
+    dup2(fd, STDOUT_FILENO);
+    close(fd);
+  }
+
+  return 0;
 }
 
 char *resolve_path(char *name) {
