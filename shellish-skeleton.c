@@ -428,6 +428,10 @@ char *resolve_path(char *name) {
     char *path = malloc(1028);
     strcpy(path, "./chatroom");
     return path;
+  } else if (strcmp(name, "dirsize") == 0) {
+    char *path = malloc(1028);
+    strcpy(path, "./dirsize");
+    return path;
   }
 
   char *env = getenv("PATH");
