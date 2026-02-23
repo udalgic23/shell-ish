@@ -11,4 +11,5 @@ A2: "https://www.techgrind.io/explain/whats-the-best-way-to-check-if-a-file-exis
 Q3: How to set up pipe in C?
 A3: "https://tldp.org/LDP/lpg/node11.html#:~:text=To%20create%20a%20simple%20pipe,be%20used%20for%20the%20pipeline"
 
-
+Q4: How to loop through every file in a directory in C?
+A4: "https://stackoverflow.com/questions/1271064/how-do-i-loop-through-all-files-in-a-folder-using-c"

@@ -403,14 +403,14 @@ int set_redirect(struct command_t *command) {
   }
 
   if (command->redirects[1] != NULL) {
-    fd = open(command->redirects[1], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    fd = open(command->redirects[1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
     if (fd < 0) { return 1; }
     dup2(fd, STDOUT_FILENO);
     close(fd);
   }
 
   if (command->redirects[2] != NULL) {
-    fd = open(command->redirects[2], O_APPEND | O_CREAT | O_WRONLY, 0666);
+    fd = open(command->redirects[2], O_APPEND | O_CREAT | O_WRONLY, 0777);
     if (fd < 0) { return 1; }
     dup2(fd, STDOUT_FILENO);
     close(fd);
@@ -423,6 +423,10 @@ char *resolve_path(char *name) {
   if (strcmp(name, "cut") == 0) {
     char *path = malloc(1028);
     strcpy(path, "./cut");
+    return path;
+  } else if (strcmp(name, "chatroom") == 0) {
+    char *path = malloc(1028);
+    strcpy(path, "./chatroom");
     return path;
   }
 
