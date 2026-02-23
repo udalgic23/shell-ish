@@ -14,6 +14,7 @@ int calculate_size(char *path) {
     struct stat st;
     stat(path, &st);
 
+    //If entry is a file directly return its size.
     if (!S_ISDIR(st.st_mode)) {            
         return st.st_size;
     }
@@ -23,6 +24,7 @@ int calculate_size(char *path) {
     DIR *dir = opendir(path);
     struct dirent *entry;
 
+    //If not a file, recursively travel into dir and compute total size, skip "." and ".." obviously.
     while((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
         
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
     DIR *dir = opendir(path);
     struct dirent *entry;
 
+    // Main logic loops through every entry in a directory and stores its size and name into 2 seperate buffers.
     int tot_e = 0;
     while((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
@@ -56,6 +59,7 @@ int main(int argc, char *argv[]) {
         tot_e++;
     }
 
+    //Print to the screen using 2 storage buffers.
     for (int i = 0; i < tot_e; i++) {
         printf("name: %s, size %d bytes\n", entries[i], sizes[i]);
     }

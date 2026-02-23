@@ -366,6 +366,9 @@ int process_command(struct command_t *command) {
   }
 }
 
+//Setting up the pipe structure by manipulating child and parent processes stdio stream.
+//Child process executes the command and stdout of child is directed to stdin of parent.
+//Recursively create another child to create each command in pipe. Propogate stdin and out until end.
 int set_pipe(struct command_t *command) {
   if (command->next == NULL) {
     execv(resolve_path(command->name), command->args);
@@ -393,6 +396,9 @@ int set_pipe(struct command_t *command) {
   return set_pipe(command->next);
 }
 
+//Changes stdin, stdout based on redirections.
+//If redirection is a "<" make stdin of the command, fd of the input file.
+//If redirectio is a ">" or ">>" make stdout of the command fd of output file. Open the file in append mode if ">>".
 int set_redirect(struct command_t *command) {
   int fd;
   if (command->redirects[0] != NULL) {
@@ -419,6 +425,9 @@ int set_redirect(struct command_t *command) {
   return 0;
 }
 
+//My own path resolution function. 
+//Loops through $PATH environment variable for regular unix commands. 
+//Redirects executable in the current directory for builtin commands.
 char *resolve_path(char *name) {
   if (strcmp(name, "cut") == 0) {
     char *path = malloc(1028);

@@ -15,6 +15,8 @@ int main(int argc, char *argv[]) {
     int fields[512];
     char *filename = NULL;
 
+    // Parsing logic for fields required in cut.
+    //Supported formats are {-d ":"}, {--delimiter ":"}, {-f 1,2 or --fields 1,2} and {-f1,2 or --fields1,2}
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--delimiter") == 0) {
             if (i < argc - 1 && strlen(argv[i + 1]) == 1) {
@@ -47,11 +49,14 @@ int main(int argc, char *argv[]) {
 
     }
 
+    //After parsing file is opened.
     FILE *fd = stdin;
     if (filename != NULL) {
         fd = fopen(filename, "r");
     }
 
+    //Each line in file processed seperately and printed.
+    //Processing works by states defined by argv and fields are stored in a buffer and printed based of fields.
     while (fgets(buf, sizeof(buf), fd)) {
         buf[strcspn(buf, "\n")] = '\0';
 

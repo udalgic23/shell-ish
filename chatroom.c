@@ -20,9 +20,11 @@ int main(int argc, char *argv[]){
     char room_path[1024] = "/tmp/chatroom-";
     strcat(room_path, roomname);
     
+    //If room does not exist create it.
     struct stat st = {0};
     if (stat(room_path, &st) == -1) mkdir(room_path, 0777);
 
+    //Create user FIFO.
     char user_path[1024];
     strcpy(user_path, room_path);
     strcat(user_path, "/");
@@ -30,6 +32,8 @@ int main(int argc, char *argv[]){
     mkfifo(user_path, 0777);
     printf("Welcome to %s!\n", roomname);
 
+    //Child process is used to print into every other pipe in the room.
+    //Travels through each pipe in the directory. Creates another child process to write and waits until execution completes.
     int pid = fork();
     if (pid == 0) {
         while (true) {
@@ -69,6 +73,7 @@ int main(int argc, char *argv[]){
             }    
             while (wait(NULL) > 0);
         }   
+    //Main process is used to continiously read from users' pipe.
     } else {
         int user_fifo = open(user_path, O_RDONLY);
         while (true) {
@@ -84,6 +89,8 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+//Helper function to find all existing pipes in the room. 
+//Needs to be executed before each write since another user might be joined since first creation.
 int find_all_users(char *room_users[], char *path, char *main_user) {
     DIR *dir;
     struct dirent *entry;
